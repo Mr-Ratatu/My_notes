@@ -9,29 +9,33 @@ import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.motivation.first.myapplication.DataBaseProject.NoteAppDataBase;
 import com.motivation.first.myapplication.Model.Utils;
 import com.motivation.first.myapplication.R;
+import com.motivation.first.myapplication.activity.MainActivity;
 
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 
 public class MotivationAdapter extends RecyclerView.Adapter<MotivationAdapter.MotivationViewHolder> {
 
     private ArrayList<Utils> list;
     private Context context;
+    private NoteAppDataBase noteAppDataBase;
 
     public MotivationAdapter(ArrayList<Utils> list, Context context) {
         this.list = list;
         this.context = context;
     }
 
-    /**Удаляет элемент view recyclerView*/
-    private void removeAt(int position) {
+    private void deleteNote(Utils utils, int position) {
+
         list.remove(position);
-        notifyItemRemoved(position);
-        notifyItemRangeChanged(position, list.size());
+        noteAppDataBase.getNoteDao().deleteNote(utils);
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -45,7 +49,7 @@ public class MotivationAdapter extends RecyclerView.Adapter<MotivationAdapter.Mo
 
     @Override
     public void onBindViewHolder(@NonNull MotivationViewHolder holder, final int position) {
-        Utils utils = list.get(position);
+        final Utils utils = list.get(position);
 
         holder.title.setText(utils.getTitle());
         holder.description.setText(utils.getDescription());
@@ -55,7 +59,7 @@ public class MotivationAdapter extends RecyclerView.Adapter<MotivationAdapter.Mo
         holder.deleteForm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                removeAt(position);
+                deleteNote(utils, position);
             }
         });
     }
@@ -82,6 +86,10 @@ public class MotivationAdapter extends RecyclerView.Adapter<MotivationAdapter.Mo
             description = itemView.findViewById(R.id.description);
             deleteForm = itemView.findViewById(R.id.delete_form);
             inform = itemView.findViewById(R.id.inform);
+
+            noteAppDataBase = Room.databaseBuilder(context, NoteAppDataBase.class, "NotesDb")
+                    .allowMainThreadQueries()
+                    .build();
 
             formDialog = new Dialog(context); //Создаем новое диалоговое окно
             formDialog.requestWindowFeature(Window.FEATURE_NO_TITLE); //Скрываем заголовк

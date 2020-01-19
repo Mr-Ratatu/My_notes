@@ -1,8 +1,11 @@
 package com.motivation.first.myapplication.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
 import android.app.Dialog;
 import android.content.Intent;
@@ -13,6 +16,7 @@ import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.motivation.first.myapplication.BasicAction;
+import com.motivation.first.myapplication.DataBaseProject.NoteAppDataBase;
 import com.motivation.first.myapplication.Model.Utils;
 import com.motivation.first.myapplication.R;
 import com.motivation.first.myapplication.adapter.MotivationAdapter;
@@ -21,19 +25,17 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private Dialog dialog;
-    public static ArrayList<Utils> list;
+    private ArrayList<Utils> list;
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
 
     private TextView inform;
     private FloatingActionButton dialogVisible;
-    private String saveTitle;
-    private String saveDescription;
     private long backPressedTime;
     private Toast backToast;
 
+    private NoteAppDataBase noteAppDataBase;
     private BasicAction basicAction;
 
     @Override
@@ -55,24 +57,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         basicAction = new BasicAction();
 
-        basicAction.checkExistingItems(list, inform);
+        noteAppDataBase = Room.databaseBuilder(this, NoteAppDataBase.class, "NotesDb")
+                .allowMainThreadQueries()
+                .build();
 
-        getNoteFromIntent();
+        createNote();
+        list.addAll(noteAppDataBase.getNoteDao().getAllNotes());
+
     }
 
-    private void getNoteFromIntent() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    private void createNote(){
         Intent intent = getIntent();
-        saveTitle = intent.getStringExtra("title");
-        saveDescription = intent.getStringExtra("description");
 
         if (intent != null) {
-            list.add(new Utils(saveTitle, saveDescription, 0));
-            adapter.notifyDataSetChanged();
 
-            basicAction.checkExistingItems(list, inform);
+            long id = intent.getLongExtra("id", 0);
 
+            Utils utils = noteAppDataBase.getNoteDao().getNote(id);
+
+            if (utils != null) {
+
+                list.add(0, utils);
+                adapter.notifyDataSetChanged();
+            }
         }
     }
+
 
     @Override
     public void onClick(View view) {
@@ -87,9 +102,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onBackPressed() {
-        //Сравниваем текущее время с временем больше на 2 секунды
         if (backPressedTime + 2000 > System.currentTimeMillis()) {
-            backToast.cancel(); //закрывает уведомление вместе с приложением
+            backToast.cancel();
             super.onBackPressed();
             return;
         } else {
@@ -97,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             backToast.show();
         }
 
-        //присваиваем время нажатия кнопки
         backPressedTime = System.currentTimeMillis();
     }
 }

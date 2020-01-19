@@ -11,10 +11,7 @@ public class Utils {
     @ColumnInfo(name = "note_id")
     private int id;
 
-    @ColumnInfo(name = "note_id")
     private String title;
-
-    @ColumnInfo(name = "note_id")
     private String description;
 
     public Utils(String title, String description, int id) {
