@@ -2,6 +2,7 @@ package com.motivation.first.myapplication.DataBaseProject;
 
 import com.motivation.first.myapplication.Model.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.room.Dao;
@@ -21,6 +22,9 @@ public interface NoteDao {
 
     @Delete
     void deleteNote(Utils utils);
+
+    @Delete
+    void deleteNote(ArrayList<Utils> list);
 
     @Query("select * from note")
     List<Utils> getAllNotes();

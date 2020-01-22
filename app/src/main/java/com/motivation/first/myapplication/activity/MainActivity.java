@@ -1,5 +1,6 @@
 package com.motivation.first.myapplication.activity;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -10,6 +11,8 @@ import androidx.room.RoomDatabase;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,7 +33,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
 
-    private TextView inform;
     private FloatingActionButton dialogVisible;
     private long backPressedTime;
     private Toast backToast;
@@ -43,35 +45,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        list = new ArrayList<>();
-        recyclerView = findViewById(R.id.recyclerView);
-        adapter = new MotivationAdapter(list, this);
-        layoutManager = new LinearLayoutManager(this);
-
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(layoutManager);
-
-        inform = findViewById(R.id.inform);
-        dialogVisible = findViewById(R.id.add_recycler);
-        dialogVisible.setOnClickListener(this);
-
-        basicAction = new BasicAction();
-
-        noteAppDataBase = Room.databaseBuilder(this, NoteAppDataBase.class, "NotesDb")
-                .allowMainThreadQueries()
-                .build();
+        init();
 
         createNote();
         list.addAll(noteAppDataBase.getNoteDao().getAllNotes());
 
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    private void createNote(){
+    private void createNote() {
         Intent intent = getIntent();
 
         if (intent != null) {
@@ -88,6 +69,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * Сраный метод
+     */
+    private void updateNote() {
+        Intent detailIntent = getIntent();
+
+        if (detailIntent != null) {
+
+            long id = detailIntent.getLongExtra("id", 0);
+
+            Utils utils = noteAppDataBase.getNoteDao().getNote(id);
+
+            noteAppDataBase.getNoteDao().updateNote(utils);
+            list.set((int) id, utils);
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private void deleteNote() {
+        noteAppDataBase.getNoteDao().deleteNote(list);
+        list.removeAll(noteAppDataBase.getNoteDao().getAllNotes());
+        list.addAll(noteAppDataBase.getNoteDao().getAllNotes());
+        adapter.notifyDataSetChanged();
+    }
+
+    /**Инициализация всех полей*/
+    private void init() {
+        list = new ArrayList<>();
+        recyclerView = findViewById(R.id.recyclerView);
+        adapter = new MotivationAdapter(list, this);
+        layoutManager = new LinearLayoutManager(this);
+
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(layoutManager);
+
+        dialogVisible = findViewById(R.id.add_recycler);
+        dialogVisible.setOnClickListener(this);
+
+        basicAction = new BasicAction();
+
+        noteAppDataBase = NoteAppDataBase.getInstance(this);
+    }
 
     @Override
     public void onClick(View view) {
@@ -98,6 +121,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.delete_all_notes:
+                deleteNote();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override

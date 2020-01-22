@@ -2,6 +2,7 @@ package com.motivation.first.myapplication.adapter;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,9 +10,11 @@ import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.motivation.first.myapplication.BasicAction;
 import com.motivation.first.myapplication.DataBaseProject.NoteAppDataBase;
 import com.motivation.first.myapplication.Model.Utils;
 import com.motivation.first.myapplication.R;
+import com.motivation.first.myapplication.activity.DetailItemsActivity;
 import com.motivation.first.myapplication.activity.MainActivity;
 
 import java.util.ArrayList;
@@ -41,10 +44,10 @@ public class MotivationAdapter extends RecyclerView.Adapter<MotivationAdapter.Mo
     @NonNull
     @Override
     public MotivationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.recyclerview_item, parent, false);
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.recyclerview_item, parent, false);
 
-        return new MotivationViewHolder(view);
+            return new MotivationViewHolder(view);
     }
 
     @Override
@@ -53,8 +56,6 @@ public class MotivationAdapter extends RecyclerView.Adapter<MotivationAdapter.Mo
 
         holder.title.setText(utils.getTitle());
         holder.description.setText(utils.getDescription());
-        holder.dialogTitle.setText(utils.getTitle());
-        holder.dialogDescription.setText(utils.getDescription());
 
         holder.deleteForm.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,9 +75,6 @@ public class MotivationAdapter extends RecyclerView.Adapter<MotivationAdapter.Mo
         public TextView title;
         public TextView description;
         public ImageButton deleteForm;
-        public Dialog formDialog;
-        public TextView dialogTitle;
-        public TextView dialogDescription;
         public TextView inform;
 
         public MotivationViewHolder(@NonNull View itemView) {
@@ -91,18 +89,18 @@ public class MotivationAdapter extends RecyclerView.Adapter<MotivationAdapter.Mo
                     .allowMainThreadQueries()
                     .build();
 
-            formDialog = new Dialog(context); //Создаем новое диалоговое окно
-            formDialog.requestWindowFeature(Window.FEATURE_NO_TITLE); //Скрываем заголовк
-            formDialog.setContentView(R.layout.clarifying_dialog); //путь к макету диалогового окна
-            dialogTitle = formDialog.findViewById(R.id.dialog_title);
-            dialogDescription = formDialog.findViewById(R.id.dialog_description);
-
             itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            formDialog.show();
+            int position = getAdapterPosition();
+            Utils utils = list.get(position);
+
+            Intent intent = new Intent(context, DetailItemsActivity.class);
+            intent.putExtra(BasicAction.TITLE_EXTRA, utils.getTitle());
+            intent.putExtra(BasicAction.DESCRIPTION_EXTRA, utils.getDescription());
+            context.startActivity(intent);
         }
     }
 }
