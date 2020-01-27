@@ -5,6 +5,7 @@ import com.motivation.first.myapplication.Model.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -23,12 +24,9 @@ public interface NoteDao {
     @Delete
     void deleteNote(Utils utils);
 
-    @Delete
-    void deleteNote(ArrayList<Utils> list);
-
     @Query("select * from note")
-    List<Utils> getAllNotes();
+    LiveData<List<Utils>> getAllNotes();
 
-    @Query("select * from note where note_id ==:noteId")
-    Utils getNote(long noteId);
+    @Query("delete from note")
+    void deleteAllNotes();
 }

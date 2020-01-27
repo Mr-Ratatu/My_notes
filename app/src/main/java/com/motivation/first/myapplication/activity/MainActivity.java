@@ -1,127 +1,107 @@
 package com.motivation.first.myapplication.activity;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
 
-import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.motivation.first.myapplication.BasicAction;
 import com.motivation.first.myapplication.DataBaseProject.NoteAppDataBase;
 import com.motivation.first.myapplication.Model.Utils;
+import com.motivation.first.myapplication.NoteViewModel;
 import com.motivation.first.myapplication.R;
-import com.motivation.first.myapplication.adapter.MotivationAdapter;
+import com.motivation.first.myapplication.adapter.MyNoteAdapter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private ArrayList<Utils> list;
-    private RecyclerView recyclerView;
-    private RecyclerView.Adapter adapter;
-    private RecyclerView.LayoutManager layoutManager;
+    public static final int ADD_NOTE_REQUEST = 1;
 
-    private FloatingActionButton dialogVisible;
+    private NoteViewModel noteViewModel;
+    private ArrayList<Utils> list;
+    private MyNoteAdapter adapter;
+
+    /**Следующие два поля нужны для метода onBackPressed*/
     private long backPressedTime;
     private Toast backToast;
-
-    private NoteAppDataBase noteAppDataBase;
-    private BasicAction basicAction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        init();
-
-        createNote();
-        list.addAll(noteAppDataBase.getNoteDao().getAllNotes());
-
-    }
-
-    private void createNote() {
-        Intent intent = getIntent();
-
-        if (intent != null) {
-
-            long id = intent.getLongExtra("id", 0);
-
-            Utils utils = noteAppDataBase.getNoteDao().getNote(id);
-
-            if (utils != null) {
-
-                list.add(0, utils);
-                adapter.notifyDataSetChanged();
-            }
-        }
-    }
-
-    /**
-     * Сраный метод
-     */
-    private void updateNote() {
-        Intent detailIntent = getIntent();
-
-        if (detailIntent != null) {
-
-            long id = detailIntent.getLongExtra("id", 0);
-
-            Utils utils = noteAppDataBase.getNoteDao().getNote(id);
-
-            noteAppDataBase.getNoteDao().updateNote(utils);
-            list.set((int) id, utils);
-            adapter.notifyDataSetChanged();
-        }
-    }
-
-    private void deleteNote() {
-        noteAppDataBase.getNoteDao().deleteNote(list);
-        list.removeAll(noteAppDataBase.getNoteDao().getAllNotes());
-        list.addAll(noteAppDataBase.getNoteDao().getAllNotes());
-        adapter.notifyDataSetChanged();
-    }
-
-    /**Инициализация всех полей*/
-    private void init() {
-        list = new ArrayList<>();
-        recyclerView = findViewById(R.id.recyclerView);
-        adapter = new MotivationAdapter(list, this);
-        layoutManager = new LinearLayoutManager(this);
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setHasFixedSize(true);
+        adapter = new MyNoteAdapter(this);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
 
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(layoutManager);
 
-        dialogVisible = findViewById(R.id.add_recycler);
+        /**Инициализация ViewModel*/
+        noteViewModel = ViewModelProviders.of(this).get(NoteViewModel.class);
+        noteViewModel.getAllNotes().observe(this, new Observer<List<Utils>>() {
+            @Override
+            public void onChanged(@Nullable List<Utils> utils) {
+                adapter.setNotes(utils);
+            }
+        });
+
+        init();
+
+    }
+
+    /**Инициализация всех полей*/
+    private void init() {
+
+        FloatingActionButton dialogVisible = findViewById(R.id.add_recycler);
         dialogVisible.setOnClickListener(this);
 
-        basicAction = new BasicAction();
-
-        noteAppDataBase = NoteAppDataBase.getInstance(this);
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.add_recycler:
-
-                startActivity(new Intent(getApplicationContext(), AddNoteActivity.class));
+                Intent intent = new Intent(MainActivity.this, AddNoteActivity.class);
+                startActivityForResult(intent, ADD_NOTE_REQUEST);
                 break;
         }
-
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == ADD_NOTE_REQUEST && resultCode == RESULT_OK) {
+            String title = data.getStringExtra(AddNoteActivity.EXTRA_TITLE);
+            String description = data.getStringExtra(AddNoteActivity.EXTRA_DESCRIPTION);
+
+            Utils utils = new Utils(title, description);
+            noteViewModel.insert(utils);
+
+            Toast.makeText(this, "Заметка создана", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Что-то пошло не так", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    /**-----------------------------Методы не требующие разъекснений----------------------------*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -134,7 +114,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (item.getItemId()) {
             case R.id.delete_all_notes:
-                deleteNote();
                 return true;
 
             default:

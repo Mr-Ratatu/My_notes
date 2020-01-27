@@ -1,5 +1,7 @@
 package com.motivation.first.myapplication.Model;
 
+import android.util.Log;
+
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -9,15 +11,14 @@ public class Utils {
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "note_id")
-    private int id;
+    private long id;
 
     private String title;
     private String description;
 
-    public Utils(String title, String description, int id) {
+    public Utils(String title, String description) {
         this.title = title;
         this.description = description;
-        this.id = id;
     }
 
     public String getTitle() {
@@ -28,19 +29,12 @@ public class Utils {
         return description;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 }

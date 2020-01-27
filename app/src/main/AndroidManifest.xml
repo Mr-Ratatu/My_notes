@@ -10,8 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".activity.DetailItemsActivity"
-            android:label="Просмотр заметки"
-            android:parentActivityName=".activity.MainActivity" ></activity>
+            android:label="Просмотр заметки"></activity>
         <activity
             android:name=".activity.AddNoteActivity"
             android:label="Новая заметка"

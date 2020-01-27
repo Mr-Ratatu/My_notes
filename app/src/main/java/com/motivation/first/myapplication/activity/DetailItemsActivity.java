@@ -6,13 +6,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.motivation.first.myapplication.BasicAction;
 import com.motivation.first.myapplication.DataBaseProject.NoteAppDataBase;
 import com.motivation.first.myapplication.Model.Utils;
 import com.motivation.first.myapplication.R;
-import com.motivation.first.myapplication.adapter.MotivationAdapter;
 
 public class DetailItemsActivity extends AppCompatActivity {
 
@@ -50,8 +49,8 @@ public class DetailItemsActivity extends AppCompatActivity {
         String fieldDescription;
 
         if (intent != null) {
-            fieldTitle = intent.getStringExtra(BasicAction.TITLE_EXTRA);
-            fieldDescription = intent.getStringExtra(BasicAction.DESCRIPTION_EXTRA);
+            fieldTitle = intent.getStringExtra("title");
+            fieldDescription = intent.getStringExtra("description");
 
             titleDetail.setText(fieldTitle);
             descriptionDetail.setText(fieldDescription);
@@ -82,11 +81,8 @@ public class DetailItemsActivity extends AppCompatActivity {
             fieldTitle = titleDetail.getText().toString();
             fieldDescription = descriptionDetail.getText().toString();
 
-            Intent detailIntent = new Intent(DetailItemsActivity.this, MainActivity.class);
-            long id = noteAppDataBase.getNoteDao().addNote(new Utils(fieldTitle, fieldDescription, 0));
-
-            detailIntent.putExtra("editId", id);
-            startActivity(detailIntent);
+            noteAppDataBase.getNoteDao().updateNote(new Utils(fieldTitle, fieldDescription));
+            Toast.makeText(this, "Данные обновлены", Toast.LENGTH_SHORT).show();
         }
     }
 }
